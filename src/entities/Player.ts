@@ -14,7 +14,7 @@ export class Player extends Entity {
         this.hp = 5;
         this.maxhp = 5;
         this.flashTime = 1000;
-        this.gs.collideMap.push(this.sprite);
+        this.gs.collideMap.add(this.sprite);
         this.sprite.setSize(12,15);
         this.sprite.name = 'player';
         this.sprite.setGravityY(C.GRAVITY);

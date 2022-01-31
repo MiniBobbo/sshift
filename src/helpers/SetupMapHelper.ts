@@ -12,8 +12,6 @@ export class SetupMapHelper {
     static SetupMap(gs:GameScene, maps:LDtkMapPack):MapObjects {
         var mo = new MapObjects();
 
-        gs.collideMap=[];
-
         maps.displayLayers.find((l:Phaser.Tilemaps.TilemapLayer) => {
             if(l.name == 'Bg')
                 l.setDepth(0);
@@ -61,12 +59,12 @@ export class SetupMapHelper {
     }
 
     static DestroyMap(gs:GameScene, maps:LDtkMapPack) {
-        SetupMapHelper.CurrentCollider.destroy();
+        // SetupMapHelper.CurrentCollider.destroy();
         maps.Destroy();
     }
 
     static CreatePhysics(gs:GameScene, maps:LDtkMapPack) {
-        this.CurrentCollider = gs.physics.add.collider(gs.collideMap, maps.collideLayer);
+        gs.IntMaps.add(maps.collideLayer);
 
         //Set tile specific things here...
 

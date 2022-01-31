@@ -29,14 +29,7 @@ export class PlayerAir extends FSMModule {
     update(dt:number) {
         let ih = this.ih;
         if(ih.IsJustPressed('attack')) {
-            if(C.PUP_CLIMB && ih.IsPressed('left') && this.e.sprite.body.blocked.left) {
-                this.e.sprite.flipX = true;
-                this.parent.changeFSM('climb');
-            } else if (C.PUP_CLIMB && ih.IsPressed('right') && this.e.sprite.body.blocked.right) {
-                this.e.sprite.flipX = false;
-                this.parent.changeFSM('climb');
-            } else
-                this.e.changeFSM('attack');
+            this.e.changeFSM('attack');
             return;
         }
 

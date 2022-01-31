@@ -1,7 +1,6 @@
 import { TextBox } from "../entities/TextBox";
 import { IH } from "../IH/IH";
 import { TravelZone } from "../zones/TravelZone";
-import { C } from "../C";
 import { EnemyFactory } from "../EnemyFactory";
 import { MessageZone } from "../zones/MessageZone";
 import { DamageZone } from "../zones/DamageZone";
@@ -9,11 +8,8 @@ import { PowerupZone } from "../zones/PowerupZone";
 import { Player } from "../entities/Player";
 import { LDtkMapPack, LdtkReader, Neighbour } from "../map/LDtkReader";
 import { SetupMapHelper } from "../helpers/SetupMapHelper";
-import { isThisTypeNode, textChangeRangeIsUnchanged } from "typescript";
-import { threadId } from "worker_threads";
 import { MapObjects } from "../map/MapObjects";
-import {MergedInput} from "../MergedInput";
-import { Console } from "console";
+import { C } from "../C";
 
 export class GameScene extends Phaser.Scene {
     player!:Player;
@@ -26,36 +22,46 @@ export class GameScene extends Phaser.Scene {
     debugText!:Phaser.GameObjects.BitmapText;
     map!:Phaser.Tilemaps.Tilemap;
     zones!:Array<Phaser.GameObjects.Zone>;
-    collideMap!:Array<Phaser.GameObjects.GameObject>;
+    collideMap!:Phaser.GameObjects.Group;
     enemies!:Array<Phaser.GameObjects.GameObject>;
     cam:Phaser.GameObjects.Image;
-
+    IntMaps:Phaser.GameObjects.Group;
+    // IntMaps:Array<Phaser.Tilemaps.TilemapLayer>;
     effects!:Phaser.GameObjects.Group;
     tb!:TextBox;
     mg!:Phaser.Tilemaps.TilemapLayer;
 
+    init:boolean = false;
+
     preload() {
         this.ih = new IH(this);
-        this.load.scenePlugin('mergedInput', MergedInput);
-        
-
     }
 
     create() {
-        let g = this.add.graphics();
+        // let g = this.add.graphics();
+        if(!this.init) {
+            this.InitScene();
+            this.init = true;
+        }
+
+        this.CreateMap(this.reader);
+        this.cameras.main.startFollow(this.player.sprite);
+
+        this.physics.add.collider(this.collideMap, this.IntMaps);
+        this.cameras.main.fadeIn(300);
+    }
+
+    InitScene() {
         this.zones=[];
-        this.collideMap=[];
+        this.collideMap=this.add.group();
+        this.IntMaps = this.add.group();
         this.enemies = [];
         var r:LdtkReader = new LdtkReader(this,this.cache.json.get('level'));
         this.reader = r;
         this.cam = this.add.image(0,0,'atlas').setVisible(false);
-
-        this.CreateMap(r, 'Level_0');
-        this.cameras.main.startFollow(this.player.sprite);
-
-        this.physics.add.overlap(this.player.sprite, this.enemies, (p:any, e:any) => {
-            e.emit('hitplayer', p);
-        }); 
+        // this.physics.add.overlap(this.player.sprite, this.enemies, (p:any, e:any) => {
+        //     e.emit('hitplayer', p);
+        // }); 
 
         this.effects = this.add.group({
             classType:Phaser.GameObjects.Sprite
@@ -65,7 +71,7 @@ export class GameScene extends Phaser.Scene {
         .setScrollFactor(0,0);
 
         this.events.on('effect', this.Effect, this);
-        this.player.sprite.on('dead', this.PlayerDied, this);
+        // this.player.sprite.on('dead', this.PlayerDied, this);
         this.events.on('shutdown', this.ShutDown, this);
         this.events.on('travel', () => { this.player.fsm.clearModule(); this.cameras.main.fadeOut(200, 0,0,0,(cam:any, progress:number) => { if(progress == 1) this.scene.restart();}); }, this);
         this.events.on('textbox', (speaker:{x:number, y:number}, message:string) => {
@@ -80,18 +86,18 @@ export class GameScene extends Phaser.Scene {
         this.tb = new TextBox(this, this.ih);
         this.tb.setVisible(false);
         this.cameras.main.setRoundPixels(true);
-        this.cameras.main.fadeIn(300);
+
     }
 
-    private CreateMap(r: LdtkReader, nextMapName:string) {
-        this.nextMap = r.CreateMap(nextMapName, 'mapts');
+    private CreateMap(r: LdtkReader) {
+        this.nextMap = r.CreateMap(C.currentLevel, 'mapts');
         if(this.currentMap == null) {
             this.nextMapObjects = SetupMapHelper.SetupMap(this,this.nextMap);
             SetupMapHelper.CreatePlayer(this, this.nextMap);
             this.cameras.main.setBounds(0, 0, this.nextMap.width, this.nextMap.height);
         } else {
             this.nextMapObjects = SetupMapHelper.SetupMap(this,this.nextMap);
-            this.currentMapObject.Destroy();
+            // this.currentMapObject.Destroy();
             SetupMapHelper.DestroyMap(this, this.currentMap);
             this.cameras.main.setBounds(0, 0, this.nextMap.width, this.nextMap.height);
         }
@@ -150,15 +156,16 @@ export class GameScene extends Phaser.Scene {
             
             //TODO: Find the correct level, not just the first because there might be more than one.
             var levels:Neighbour = this.currentMap.level.__neighbours.find(e=> e.dir == 'e');
-            this.CreateMap(this.reader, this.reader.GetLevelFromID(levels.levelUid).identifier);
+            C.currentLevel = this.reader.GetLevelFromID(levels.levelUid).identifier;
+            this.CreateMap(this.reader);
             this.player.sprite.x = 10;
         } else if (this.player.sprite.x < 0) {
             console.log('Off screen to left');
             var width = this.currentMap.width;
             //TODO: Find the correct level, not just the first because there might be more than one.
             var levels:Neighbour = this.currentMap.level.__neighbours.find(e=> e.dir == 'w');
-            this.CreateMap(this.reader, this.reader.GetLevelFromID(levels.levelUid).identifier);
-            this.player.sprite.x = width - 10;
+            // this.CreateMap(this.reader, this.reader.GetLevelFromID(levels.levelUid).identifier);
+            // this.player.sprite.x = width - 10;
 
         }
 

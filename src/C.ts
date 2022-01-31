@@ -1,7 +1,7 @@
 import { GameData } from "./GameData";
 
 export class C {
-    static currentLevel:string = 'testlevel';
+    static currentLevel:string = 'Level_0';
     static previouslevel:string = 'start';
     static waypoint:string = '';
 
@@ -19,9 +19,6 @@ export class C {
     static PLAYER_JUMP_STR:number = 200;
     static PLAYER_JUMP_TIME:number = 300;
     static PLAYER_ATTACK_TIME:number = 250;
-
-    static PUP_CLIMB:boolean = false;
-    static PUP_LIGHT:boolean = false;
 
     static FLAG_COUNT:number = 100;
     static gd:GameData;
