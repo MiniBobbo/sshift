@@ -26,23 +26,24 @@ export class PlayerGround extends FSMModule {
             return;
         }
 
-        if(ih.IsJustPressed('throw')) {
-            this.e.emit('throwball');
-        }
-
-
         if(ih.IsPressed('left'))
             ax--;
         if(ih.IsPressed('right'))
             ax++;
         if(ih.IsJustPressed('jump')) {
-            this.parent.changeFSM('air');
-            this.e.sprite.setVelocityY(-C.PLAYER_JUMP_STR);
-            this.e.sprite.y -= 1;
-            this.e.sprite.body.touching.down = false;
-            this.e.sprite.body.blocked.down = false;
-
-            return;
+            if(ih.IsPressed('down')) {
+                this.parent.changeFSM('slide');
+                return;
+            } else {
+                this.parent.changeFSM('air');
+                this.e.sprite.setVelocityY(-C.PLAYER_JUMP_STR);
+                this.e.sprite.y -= 1;
+                this.e.sprite.body.touching.down = false;
+                this.e.sprite.body.blocked.down = false;
+    
+                return;
+    
+            }
         }
         this.e.scene.events.emit('debug', `P Accel: ${ax}`);
         this.e.sprite.setAccelerationX(ax * C.PLAYER_GROUND_ACCEL);

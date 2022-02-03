@@ -65,7 +65,14 @@ export class SetupMapHelper {
 
     static CreatePhysics(gs:GameScene, maps:LDtkMapPack) {
         gs.IntMaps.add(maps.collideLayer);
-
+        maps.collideLayer.forEachTile(tile => {
+            if (tile.index === 2)
+            {
+            tile.collideLeft = false;
+            tile.collideRight = false;
+            tile.collideDown = false;
+            }
+            });
         //Set tile specific things here...
 
         // tiles.forEach(element => {

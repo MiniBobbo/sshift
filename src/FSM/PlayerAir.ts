@@ -32,9 +32,9 @@ export class PlayerAir extends FSMModule {
             this.e.changeFSM('attack');
             return;
         }
-
-        if(ih.IsJustPressed('throw')) {
-            this.e.emit('throwball');
+        if(ih.IsJustPressed('jump') && (this.e.sprite.body.blocked.left || this.e.sprite.body.blocked.right) ) {
+            this.e.changeFSM('walljump');
+            return;
         }
 
         if(!ih.IsPressed('jump') || this.e.sprite.body.blocked.up)

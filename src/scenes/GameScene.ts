@@ -21,15 +21,18 @@ export class GameScene extends Phaser.Scene {
     nextMapObjects:MapObjects;
     debugText!:Phaser.GameObjects.BitmapText;
     map!:Phaser.Tilemaps.Tilemap;
-    zones!:Array<Phaser.GameObjects.Zone>;
+    zones!:Phaser.GameObjects.Group;
     collideMap!:Phaser.GameObjects.Group;
-    enemies!:Array<Phaser.GameObjects.GameObject>;
+    enemies!:Phaser.GameObjects.Group;
     cam:Phaser.GameObjects.Image;
     IntMaps:Phaser.GameObjects.Group;
     // IntMaps:Array<Phaser.Tilemaps.TilemapLayer>;
     effects!:Phaser.GameObjects.Group;
     tb!:TextBox;
     mg!:Phaser.Tilemaps.TilemapLayer;
+
+    PointerOffset:{x:number, y:number};
+    Pointer:Phaser.GameObjects.Image;
 
     init:boolean = false;
 
@@ -44,18 +47,41 @@ export class GameScene extends Phaser.Scene {
             this.init = true;
         }
 
+        this.events.on('debug', (s:string) => {this.debugText.text += `${s}\n`;});
+
+        this.PointerOffset = {x:0, y:0};
+        this.Pointer = this.add.image(0,0, 'pointer').setDepth(1000).setScrollFactor(0,0);
+
         this.CreateMap(this.reader);
         this.cameras.main.startFollow(this.player.sprite);
+
+    // Pointer lock will only work after an 'engagement gesture', e.g. mousedown, keypress, etc.
+    this.input.on('pointerdown', (pointer) => {
+
+        this.input.mouse.requestPointerLock();
+
+    }, this);
+
+    // When locked, you will have to use the movementX and movementY properties of the pointer
+    // (since a locked cursor's xy position does not update)
+    this.input.on('pointermove', (pointer) => {
+
+        if (this.input.mouse.locked)
+        {
+            this.PointerOffset.x += pointer.movementX * C.MOUSE_SENSITIVITY;
+            this.PointerOffset.y += pointer.movementY * C.MOUSE_SENSITIVITY;
+        }
+    }, this);
 
         this.physics.add.collider(this.collideMap, this.IntMaps);
         this.cameras.main.fadeIn(300);
     }
 
     InitScene() {
-        this.zones=[];
+        this.zones= this.add.group();
         this.collideMap=this.add.group();
         this.IntMaps = this.add.group();
-        this.enemies = [];
+        this.enemies = this.add.group();
         var r:LdtkReader = new LdtkReader(this,this.cache.json.get('level'));
         this.reader = r;
         this.cam = this.add.image(0,0,'atlas').setVisible(false);
@@ -68,7 +94,7 @@ export class GameScene extends Phaser.Scene {
         });
 
         this.debugText = this.add.bitmapText(2,22, '6px', '')
-        .setScrollFactor(0,0);
+        .setScrollFactor(0,0).setDepth(1000);
 
         this.events.on('effect', this.Effect, this);
         // this.player.sprite.on('dead', this.PlayerDied, this);
@@ -141,15 +167,19 @@ export class GameScene extends Phaser.Scene {
             }
         }
 
-        this.cam.setPosition(this.player.sprite.x, this.player.sprite.y);
+        this.PointerOffset.x = Phaser.Math.Clamp(this.PointerOffset.x, 0,400);
+        this.PointerOffset.y = Phaser.Math.Clamp(this.PointerOffset.y, 0,400);
+
+        this.Pointer.setPosition(this.PointerOffset.x, this.PointerOffset.y);
 
         if(this.ih.IsJustPressed('event')) {
             // this.events.emit('unlock');
         }
 
-        this.events.emit('debug', `Effects: ${this.effects.getLength()}`);
-        this.events.emit('debug', `P loc: ${Math.floor(this.player.sprite.body.x)},  ${Math.floor(this.player.sprite.body.y)}`);
-        this.events.emit('debug', `Mouse loc: ${Math.floor(this.input.mousePointer.worldX)},  ${Math.floor(this.input.mousePointer.worldY)}`);
+        this.events.emit('debug', `Player FSM: ${this.player.fsm.currentModuleName}`);
+        // this.events.emit('debug', `Effects: ${this.effects.getLength()}`);
+        // this.events.emit('debug', `P loc: ${Math.floor(this.player.sprite.body.x)},  ${Math.floor(this.player.sprite.body.y)}`);
+        // this.events.emit('debug', `Mouse loc: ${Math.floor(this.input.mousePointer.worldX)},  ${Math.floor(this.input.mousePointer.worldY)}`);
 
         if(this.player.sprite.x > this.currentMap.width) {
             console.log('Off screen to right');
@@ -164,9 +194,9 @@ export class GameScene extends Phaser.Scene {
             var width = this.currentMap.width;
             //TODO: Find the correct level, not just the first because there might be more than one.
             var levels:Neighbour = this.currentMap.level.__neighbours.find(e=> e.dir == 'w');
-            // this.CreateMap(this.reader, this.reader.GetLevelFromID(levels.levelUid).identifier);
-            // this.player.sprite.x = width - 10;
-
+            C.currentLevel = this.reader.GetLevelFromID(levels.levelUid).identifier;
+            this.CreateMap(this.reader);
+            this.player.sprite.x = width - 10;
         }
 
     }
@@ -176,19 +206,19 @@ export class GameScene extends Phaser.Scene {
             switch (o.name) {
                 case 'travel':
                     let travel = new TravelZone(this, o);
-                    this.zones.push(travel);
+                    this.zones.add(travel);
                     break;
                 case 'message':
                     let message = new MessageZone(this, o);
-                    this.zones.push(message);
+                    this.zones.add(message);
                     break;
                 case 'damage':
                     let dz = new DamageZone(this, o);
-                    this.zones.push(dz);
+                    this.zones.add(dz);
                     break;
                 case 'powerup':
                     let puz = new PowerupZone(this, o);
-                    this.zones.push(puz);
+                    this.zones.add(puz);
                     break;
                 case 'enemy':
                     EnemyFactory.CreateEnemy(this, this.ih, o);

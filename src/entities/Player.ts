@@ -6,6 +6,8 @@ import { PlayerAir } from "../FSM/PlayerAir";
 import { PlayerAttack } from "../FSM/PlayerAttack";
 import { PlayerGoToGround } from "../FSM/PlayerGoToGround";
 import { PlayerClimb } from "../FSM/PlayerClimb";
+import { PlayerSlideFSM } from "../FSM/PlayerSlideFSM";
+import { PlayerWallJumpFSM } from "../FSM/PlayerWallJumpFSM";
 
 export class Player extends Entity {
     holdingLight:boolean = true;
@@ -24,6 +26,8 @@ export class Player extends Entity {
         this.fsm.addModule('air', new PlayerAir(this));
         this.fsm.addModule('attack', new PlayerAttack(this));
         this.fsm.addModule('climb', new PlayerClimb(this));
+        this.fsm.addModule('slide', new PlayerSlideFSM(this));
+        this.fsm.addModule('walljump', new PlayerWallJumpFSM(this));
         this.fsm.addModule('gotoground', new PlayerGoToGround(this));
         this.fsm.changeModule('air');
     }
