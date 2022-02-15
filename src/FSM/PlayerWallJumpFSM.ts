@@ -9,7 +9,7 @@ export class PlayerWallJumpFSM extends FSMModule {
 
     WALLJUMP_SPEED_X:number = 100;
     WALLJUMP_SPEED_Y:number = 200;
-    WALLJUMP_TIME:number = 300;
+    WALLJUMP_TIME:number = 1000;
 
     DeltaJump:number = 0;
     lastFrameDown:boolean = false;
@@ -25,7 +25,7 @@ export class PlayerWallJumpFSM extends FSMModule {
         this.DeltaJump = 0;
         // this.FirstPass = true;
         // this.jumpingUp = true;
-        this.p.sprite.setVelocityY(this.WALLJUMP_SPEED_Y);
+        this.p.sprite.setVelocityY(-this.WALLJUMP_SPEED_Y);
         this.p.sprite.setVelocityX(-this.WALLJUMP_SPEED_X);
         if(this.p.sprite.flipX)
             this.p.sprite.setVelocityX(this.WALLJUMP_SPEED_X);
