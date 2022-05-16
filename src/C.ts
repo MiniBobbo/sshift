@@ -37,6 +37,15 @@ export class C {
         return {x:newX, y:newY};
     }
 
+    static GetTileFromPosition(x:number, y:number):{x:number, y:number} {
+        let newX = 0;
+        let newY = 0;
+        newX = Math.floor(x/C.TILE_SIZE);
+        newY = Math.floor(y/C.TILE_SIZE);
+        return {x:newX, y:newY};
+
+    }
+
     static checkFlag(flag:string):boolean {
         //@ts-ignore
         return this.gd.flags[flag];

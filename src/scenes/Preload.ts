@@ -81,11 +81,13 @@ export class Preload extends Phaser.Scene {
         IH.AddVirtualInput('jump');
         IH.AddVirtualInput('throw');
         IH.AddVirtualInput('attack');
+        IH.AddVirtualInput('event');
 
         IH.AssignKeyToVirtualInput('UP', 'up');
         IH.AssignKeyToVirtualInput('DOWN', 'down');
         IH.AssignKeyToVirtualInput('LEFT', 'left');
         IH.AssignKeyToVirtualInput('RIGHT', 'right');
+        IH.AssignKeyToVirtualInput('E', 'event');
         IH.AssignKeyToVirtualInput('W', 'up');
         IH.AssignKeyToVirtualInput('S', 'down');
         IH.AssignKeyToVirtualInput('A', 'left');

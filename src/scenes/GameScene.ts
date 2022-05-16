@@ -10,6 +10,7 @@ import { LDtkMapPack, LdtkReader, Neighbour } from "../map/LDtkReader";
 import { SetupMapHelper } from "../helpers/SetupMapHelper";
 import { MapObjects } from "../map/MapObjects";
 import { C } from "../C";
+import { NumericLiteral } from "typescript";
 
 export class GameScene extends Phaser.Scene {
     player!:Player;
@@ -17,6 +18,7 @@ export class GameScene extends Phaser.Scene {
     reader:LdtkReader;
     currentMap:LDtkMapPack;
     nextMap:LDtkMapPack;
+    allMaps:Array<LDtkMapPack>;
     currentMapObject:MapObjects;
     nextMapObjects:MapObjects;
     debugText!:Phaser.GameObjects.BitmapText;
@@ -33,6 +35,8 @@ export class GameScene extends Phaser.Scene {
 
     PointerOffset:{x:number, y:number};
     Pointer:Phaser.GameObjects.Image;
+
+    g:Phaser.GameObjects.Graphics;
 
     init:boolean = false;
 
@@ -54,7 +58,9 @@ export class GameScene extends Phaser.Scene {
 
         this.CreateMap(this.reader);
         this.cameras.main.startFollow(this.player.sprite);
-
+        this.g = this.add.graphics({
+            x:0, y:0,
+        }).fillStyle(0x882244, .5).setDepth(5000);
     // Pointer lock will only work after an 'engagement gesture', e.g. mousedown, keypress, etc.
     this.input.on('pointerdown', (pointer) => {
 
@@ -89,6 +95,8 @@ export class GameScene extends Phaser.Scene {
         //     e.emit('hitplayer', p);
         // }); 
 
+        this.allMaps = [];
+
         this.effects = this.add.group({
             classType:Phaser.GameObjects.Sprite
         });
@@ -122,11 +130,14 @@ export class GameScene extends Phaser.Scene {
             SetupMapHelper.CreatePlayer(this, this.nextMap);
             this.cameras.main.setBounds(0, 0, this.nextMap.width, this.nextMap.height);
         } else {
+            this.IntMaps.clear();
             this.nextMapObjects = SetupMapHelper.SetupMap(this,this.nextMap);
             // this.currentMapObject.Destroy();
             SetupMapHelper.DestroyMap(this, this.currentMap);
             this.cameras.main.setBounds(0, 0, this.nextMap.width, this.nextMap.height);
         }
+        this.currentMap.Destroy();
+        this.currentMapObject.Destroy();
         this.currentMap = this.nextMap;
         this.currentMapObject = this.nextMapObjects;
         this.nextMap = null;
@@ -161,11 +172,6 @@ export class GameScene extends Phaser.Scene {
     update(time:number, dt:number) {
         this.debugText.text = '';
         this.ih.update();
-        if(this.tb.visible) {
-            if(this.ih.IsJustPressed('jump') ||this.ih.IsJustPressed('attack') ) {
-                this.tb.setVisible(false);
-            }
-        }
 
         this.PointerOffset.x = Phaser.Math.Clamp(this.PointerOffset.x, 0,400);
         this.PointerOffset.y = Phaser.Math.Clamp(this.PointerOffset.y, 0,400);
@@ -173,7 +179,25 @@ export class GameScene extends Phaser.Scene {
         this.Pointer.setPosition(this.PointerOffset.x, this.PointerOffset.y);
 
         if(this.ih.IsJustPressed('event')) {
-            // this.events.emit('unlock');
+            var from = C.GetTileFromPosition(this.player.sprite.x, this.player.sprite.y);
+            var to = C.GetTileFromPosition(this.Pointer.x + this.cameras.main.scrollX, this.Pointer.y + this.cameras.main.scrollY);
+            var line = this.GetLine(from.x, from.y, to.x, to.y);
+            this.g.clear();
+            line.forEach(element => {
+                this.g.fillRect(element.x * C.TILE_SIZE, element.y * C.TILE_SIZE, C.TILE_SIZE, C.TILE_SIZE);
+            });
+            // for (let index = 0; index < line.length; index++) {
+            //     const element = line[index];
+            //     let tile = this.currentMap.collideLayer.getTileAt(element.x, element.y);
+            //     if(tile.collides) {
+            //         this.g.fillStyle(0xff0000, .5);
+            //         this.g.fillRect(element.x * C.TILE_SIZE, element.y * C.TILE_SIZE, C.TILE_SIZE, C.TILE_SIZE);
+            //         break;
+            //     } else {
+            //         this.g.fillStyle(0x00ff55, .5);
+            //         this.g.fillRect(element.x * C.TILE_SIZE, element.y * C.TILE_SIZE, C.TILE_SIZE, C.TILE_SIZE);
+            //     }
+            // }
         }
 
         this.events.emit('debug', `Player FSM: ${this.player.fsm.currentModuleName}`);
@@ -197,6 +221,22 @@ export class GameScene extends Phaser.Scene {
             C.currentLevel = this.reader.GetLevelFromID(levels.levelUid).identifier;
             this.CreateMap(this.reader);
             this.player.sprite.x = width - 10;
+        } else if (this.player.sprite.y < 0) {
+            console.log('Off screen up');
+            var height = this.currentMap.height;
+            //TODO: Find the correct level, not just the first because there might be more than one.
+            var levels:Neighbour = this.currentMap.level.__neighbours.find(e=> e.dir == 'n');
+            C.currentLevel = this.reader.GetLevelFromID(levels.levelUid).identifier;
+            this.CreateMap(this.reader);
+            this.player.sprite.y = height - 10;
+        } else if (this.player.sprite.y > this.currentMap.height) {
+            console.log('Off screen down');
+            var height = this.currentMap.height;
+            //TODO: Find the correct level, not just the first because there might be more than one.
+            var levels:Neighbour = this.currentMap.level.__neighbours.find(e=> e.dir == 's');
+            C.currentLevel = this.reader.GetLevelFromID(levels.levelUid).identifier;
+            this.CreateMap(this.reader);
+            this.player.sprite.y = 10;
         }
 
     }
@@ -250,6 +290,59 @@ export class GameScene extends Phaser.Scene {
 
     PlayerDied() {
 
+    }
+
+    /**
+     * Uses bresenham's line algorithm to get a list of integer points between two points.  
+     * If being used on a collition map this should be converted to tile units first.
+     * @param x0 
+     * @param y0 
+     * @param x1 
+     * @param y1 
+     * @returns An array of points.  Unsure if ordered or not.
+     */
+    GetLine(x0:number, y0:number, x1:number, y1:number) : Array<{x:number, y:number}> {
+        var pts:Array<{x:number, y:number}> = [];
+        var swapXY = Math.abs( y1 - y0 ) > Math.abs( x1 - x0 );
+        var tmp : number;
+        if ( swapXY ) {
+            // swap x and y
+            tmp = x0; x0 = y0; y0 = tmp; // swap x0 and y0
+            tmp = x1; x1 = y1; y1 = tmp; // swap x1 and y1
+        }
+    
+        if ( x0 > x1 ) {
+            // make sure x0 < x1
+            tmp = x0; x0 = x1; x1 = tmp; // swap x0 and x1
+            tmp = y0; y0 = y1; y1 = tmp; // swap y0 and y1
+        }
+    
+        var deltax = x1 - x0;
+        var deltay = Math.floor( Math.abs( y1 - y0 ) );
+        var error = Math.floor( deltax / 2 );
+        var y = y0;
+        var ystep = y0 < y1 ? 1 : -1;
+        if( swapXY )
+            // Y / X
+            for ( let x = x0; x < x1;x++ ) {
+                pts.push({x:y, y:x});
+                error -= deltay;
+                if ( error < 0 ) {
+                    y = y + ystep;
+                    error = error + deltax;
+                }
+            }
+        else
+            // X / Y
+            for ( let x = x0; x < x1;x++ ) {
+                pts.push({x:x, y:y});
+                error -= deltay;
+                if ( error < 0 ) {
+                    y = y + ystep;
+                    error = error + deltax;
+                }
+            }
+        return pts;
     }
         
 }

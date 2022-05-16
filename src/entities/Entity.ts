@@ -16,6 +16,9 @@ export class Entity {
     flashing:boolean = false;
     flashingRemaining:number = 0;
     flashTime:number = 200;
+    //What level does this entity belong to?  When the player gets far enough away from an entity's home level the entity will
+    //reset and need to be recreated.
+    level:string;
 
 
     constructor(scene:Phaser.Scene, ih:IH) {
