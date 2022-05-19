@@ -11,11 +11,11 @@ export class FSM {
     modules:Map<string, FSMModule>;
     currentModule!:FSMModule|undefined;
     currentModuleName!:string;
+    private enabled:boolean = true;
     constructor(parent:IFSM) {
         this.parent = parent;
         this.modules = new Map<string, FSMModule>();
         this.addModule('nothing', new NothingFSM(parent));
-
     }
 
     addModule(moduleName:string, module:FSMModule) {
@@ -33,12 +33,16 @@ export class FSM {
         }
     }
 
+    SetEnabled(e:boolean = true) {
+        this.enabled = e;
+    }
+
     clearModule() {
     this.currentModule = undefined;        
     }
 
     update(time:number, dt:number) {
-        if(this.currentModule != null) {
+        if(this.enabled && this.currentModule != null) {
             // dt /= 1000;
             this.currentModule.update(dt);
         }

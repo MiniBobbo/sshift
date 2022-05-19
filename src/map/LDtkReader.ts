@@ -31,7 +31,9 @@ export class LdtkReader {
                 var l = this.CreateIntGridLayer(layer, tileset)
                 // l.x = level.worldX;
                 // l.y = level.worldY;
+                l.name = levelName;
                 mappack.collideLayer = l;
+                l.setActive(false);
                 
             } else if (layer.__type === 'AutoLayer') {
                 var l = this.CreateAutoLayer(layer, tileset);
@@ -71,7 +73,7 @@ export class LdtkReader {
         });
 
         let ti = map.addTilesetImage(tileset);
-        let l = map.createLayer(0, ti, 0,0).setVisible(true);
+        let l = map.createLayer(0, ti, 0,0).setVisible(false);
 
         layer.autoLayerTiles.forEach(t => {
             if(t.f != 0) {
@@ -152,6 +154,13 @@ export class LDtkMapPack {
             element.destroy();
         });
         
+    }
+
+    SetVisible(visible:boolean = true) {
+        this.displayLayers.forEach(element => {
+            element.setVisible(visible);
+        });
+
     }
 }
 

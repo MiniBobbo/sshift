@@ -11,6 +11,7 @@ import { SetupMapHelper } from "../helpers/SetupMapHelper";
 import { MapObjects } from "../map/MapObjects";
 import { C } from "../C";
 import { NumericLiteral } from "typescript";
+import { threadId } from "worker_threads";
 
 export class GameScene extends Phaser.Scene {
     player!:Player;
@@ -19,8 +20,7 @@ export class GameScene extends Phaser.Scene {
     currentMap:LDtkMapPack;
     nextMap:LDtkMapPack;
     allMaps:Array<LDtkMapPack>;
-    currentMapObject:MapObjects;
-    nextMapObjects:MapObjects;
+    AllMapObjects:Array<MapObjects>;
     debugText!:Phaser.GameObjects.BitmapText;
     map!:Phaser.Tilemaps.Tilemap;
     zones!:Phaser.GameObjects.Group;
@@ -28,10 +28,11 @@ export class GameScene extends Phaser.Scene {
     enemies!:Phaser.GameObjects.Group;
     cam:Phaser.GameObjects.Image;
     IntMaps:Phaser.GameObjects.Group;
-    // IntMaps:Array<Phaser.Tilemaps.TilemapLayer>;
     effects!:Phaser.GameObjects.Group;
     tb!:TextBox;
     mg!:Phaser.Tilemaps.TilemapLayer;
+    private LastVisitedLevels:Array<string>;
+    private _mapCollider:Phaser.Physics.Arcade.Collider;
 
     PointerOffset:{x:number, y:number};
     Pointer:Phaser.GameObjects.Image;
@@ -51,21 +52,22 @@ export class GameScene extends Phaser.Scene {
             this.init = true;
         }
 
+        this.ChangeMap(C.currentLevel);
+        SetupMapHelper.CreatePlayer(this, this.currentMap);
+
         this.events.on('debug', (s:string) => {this.debugText.text += `${s}\n`;});
 
         this.PointerOffset = {x:0, y:0};
         this.Pointer = this.add.image(0,0, 'pointer').setDepth(1000).setScrollFactor(0,0);
 
-        this.CreateMap(this.reader);
+        // this.CreateMap(this.reader);
         this.cameras.main.startFollow(this.player.sprite);
         this.g = this.add.graphics({
             x:0, y:0,
         }).fillStyle(0x882244, .5).setDepth(5000);
     // Pointer lock will only work after an 'engagement gesture', e.g. mousedown, keypress, etc.
     this.input.on('pointerdown', (pointer) => {
-
         this.input.mouse.requestPointerLock();
-
     }, this);
 
     // When locked, you will have to use the movementX and movementY properties of the pointer
@@ -79,7 +81,11 @@ export class GameScene extends Phaser.Scene {
         }
     }, this);
 
-        this.physics.add.collider(this.collideMap, this.IntMaps);
+        // let ground = this.physics.add.sprite(400,400, 'atlas').setSize(100,100).setImmovable(true);
+        // this.physics.add.collider(this.collideMap, ground);
+        let m = this.allMaps.find(e=>e.level.identifier == 'Level_0');
+
+        // this.physics.add.collider(this.IntMaps, m.collideLayer);
         this.cameras.main.fadeIn(300);
     }
 
@@ -96,6 +102,12 @@ export class GameScene extends Phaser.Scene {
         // }); 
 
         this.allMaps = [];
+        this.AllMapObjects = [];
+        r.ldtk.levels.forEach(element => {
+            let m = r.CreateMap(element.identifier, 'mapts')
+            this.allMaps.push(m);
+            this.IntMaps.add(m.collideLayer);
+        });
 
         this.effects = this.add.group({
             classType:Phaser.GameObjects.Sprite
@@ -123,27 +135,63 @@ export class GameScene extends Phaser.Scene {
 
     }
 
-    private CreateMap(r: LdtkReader) {
-        this.nextMap = r.CreateMap(C.currentLevel, 'mapts');
-        if(this.currentMap == null) {
-            this.nextMapObjects = SetupMapHelper.SetupMap(this,this.nextMap);
-            SetupMapHelper.CreatePlayer(this, this.nextMap);
-            this.cameras.main.setBounds(0, 0, this.nextMap.width, this.nextMap.height);
-        } else {
-            this.IntMaps.clear();
-            this.nextMapObjects = SetupMapHelper.SetupMap(this,this.nextMap);
-            // this.currentMapObject.Destroy();
-            SetupMapHelper.DestroyMap(this, this.currentMap);
-            this.cameras.main.setBounds(0, 0, this.nextMap.width, this.nextMap.height);
+    private ChangeMap(newMap:string) {
+        // this.IntMaps.clear();
+        C.currentLevel = newMap;
+        if(this.currentMap != null) {
+            this.currentMap.SetVisible(false);
+            // this.physics.world.colliders.removeAll();
+            this.physics.world.colliders.remove(this._mapCollider);
         }
-        this.currentMap.Destroy();
-        this.currentMapObject.Destroy();
-        this.currentMap = this.nextMap;
-        this.currentMapObject = this.nextMapObjects;
-        this.nextMap = null;
-        this.nextMapObjects = null;
-        // this.physics.world.setBounds(this.currentMap.worldX, this.currentMap.worldY, this.currentMap.width, this.currentMap.height);
+        let m = this.allMaps.find(e=>e.level.identifier == newMap);
+        m.SetVisible(true);
+        m.collideLayer.setCollision([1,3]);
+        // this.IntMaps.add(m.collideLayer);
+        //Temp
+        // m.collideLayer.setVisible(true);
+        this._mapCollider = this.physics.add.collider(this.collideMap, m.collideLayer);
+        this.physics.world.colliders[0];
+        this.currentMap = m;
+        this.cameras.main.setBounds(0, 0, this.currentMap.width, this.currentMap.height);
     }
+
+    // private CreateMap(r: LdtkReader) {
+
+    //     this.IntMaps.clear();
+    //     this.nextMap = this.allMaps.find(e=>e.level.identifier == C.currentLevel);
+
+    //     if(this.currentMap == null) {
+    //         let mo = SetupMapHelper.SetupMap(this,this.nextMap);
+    //         SetupMapHelper.CreatePlayer(this, this.nextMap);
+    //         this.cameras.main.setBounds(0, 0, this.nextMap.width, this.nextMap.height);
+    //         this.AllMapObjects.push(mo);
+    //     } else {
+    //         //Find this level's AllMapObjects, if it exists.
+    //         let mo = this.AllMapObjects.find(e=>e.Level == C.currentLevel);
+    //         this.AllMapObjects.forEach(element => {
+    //             if(element.Level != C.currentLevel)
+    //                 element.SetEnabled(false);
+    //         });
+    //         this.IntMaps.clear();
+    //         // this.currentMapObject.Destroy();
+    //         if(mo == null || mo == undefined) {
+    //             this.AllMapObjects.push(SetupMapHelper.SetupMap(this,this.nextMap));
+    //         } else {
+    //             mo.SetEnabled(true);
+    //         }
+    //         this.currentMap.SetVisible(false);
+    //         this.cameras.main.setBounds(0, 0, this.nextMap.width, this.nextMap.height);
+    //     }
+    //     // this.currentMap.Destroy();
+    //     // this.currentMapObject.Destroy();
+    //     this.currentMap = this.nextMap;
+    //     // this.currentMapObject = this.nextMapObjects;
+    //     this.nextMap = null;
+    //     // this.nextMapObjects = null;
+
+    //     //Set the current map visible
+    //     this.currentMap.SetVisible();
+    // }
 
     /**
      * remove the listeners of all the events creted in create() or they will fire multiple times.  
@@ -210,32 +258,32 @@ export class GameScene extends Phaser.Scene {
             
             //TODO: Find the correct level, not just the first because there might be more than one.
             var levels:Neighbour = this.currentMap.level.__neighbours.find(e=> e.dir == 'e');
-            C.currentLevel = this.reader.GetLevelFromID(levels.levelUid).identifier;
-            this.CreateMap(this.reader);
+            let mapname = this.reader.GetLevelFromID(levels.levelUid).identifier;
+            this.ChangeMap(mapname);
             this.player.sprite.x = 10;
         } else if (this.player.sprite.x < 0) {
             console.log('Off screen to left');
             var width = this.currentMap.width;
             //TODO: Find the correct level, not just the first because there might be more than one.
             var levels:Neighbour = this.currentMap.level.__neighbours.find(e=> e.dir == 'w');
-            C.currentLevel = this.reader.GetLevelFromID(levels.levelUid).identifier;
-            this.CreateMap(this.reader);
+            let mapname = this.reader.GetLevelFromID(levels.levelUid).identifier;
+            this.ChangeMap(mapname);
             this.player.sprite.x = width - 10;
         } else if (this.player.sprite.y < 0) {
             console.log('Off screen up');
             var height = this.currentMap.height;
             //TODO: Find the correct level, not just the first because there might be more than one.
             var levels:Neighbour = this.currentMap.level.__neighbours.find(e=> e.dir == 'n');
-            C.currentLevel = this.reader.GetLevelFromID(levels.levelUid).identifier;
-            this.CreateMap(this.reader);
+            let mapname = this.reader.GetLevelFromID(levels.levelUid).identifier;
+            this.ChangeMap(mapname);
             this.player.sprite.y = height - 10;
         } else if (this.player.sprite.y > this.currentMap.height) {
             console.log('Off screen down');
             var height = this.currentMap.height;
             //TODO: Find the correct level, not just the first because there might be more than one.
             var levels:Neighbour = this.currentMap.level.__neighbours.find(e=> e.dir == 's');
-            C.currentLevel = this.reader.GetLevelFromID(levels.levelUid).identifier;
-            this.CreateMap(this.reader);
+            let mapname = this.reader.GetLevelFromID(levels.levelUid).identifier;
+            this.ChangeMap(mapname);
             this.player.sprite.y = 10;
         }
 

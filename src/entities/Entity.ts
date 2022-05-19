@@ -16,9 +16,6 @@ export class Entity {
     flashing:boolean = false;
     flashingRemaining:number = 0;
     flashTime:number = 200;
-    //What level does this entity belong to?  When the player gets far enough away from an entity's home level the entity will
-    //reset and need to be recreated.
-    level:string;
 
 
     constructor(scene:Phaser.Scene, ih:IH) {
@@ -38,12 +35,12 @@ export class Entity {
         this.sprite.on('hitbyattack', this.HitByAttack, this);
 
         this.scene.events.on('update',this.Update, this)
-        this.scene.events.on('travel',() => {this.fsm.clearModule();}, this);
+        // this.scene.events.on('travel',() => {this.fsm.SetEnabled(false);}, this);
     }
 
     dispose() {
         this.scene.events.removeListener('update',this.Update, this)
-        this.scene.events.removeListener('travel',() => {this.fsm.clearModule();}, this);
+        // this.scene.events.removeListener('travel',() => {this.fsm.clearModule();}, this);
         this.sprite.destroy();
     }
 
@@ -112,5 +109,18 @@ export class Entity {
     Flash(length:number = 1000) {
         this.flashing = true;
         this.flashingRemaining = length;
+    }
+
+    SetEnabled(enabled:boolean = true) {
+        console.log(`Setting ${this.sprite.name} to enabled = ${enabled}`);
+        if(!enabled) {
+            this.sprite.active = false;
+            this.sprite.visible = false;
+            this.fsm.SetEnabled(false);
+        } else {
+            this.sprite.active = true;
+            this.sprite.visible = true;
+            this.fsm.SetEnabled(true);
+        }
     }
 }
