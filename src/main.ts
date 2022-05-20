@@ -10,9 +10,9 @@ class Main extends Phaser.Game {
   constructor() {
     const config: Phaser.Types.Core.GameConfig = {
       type: Phaser.WEBGL,
-      width: 400,
-      height: 400,
-      zoom:1,
+      width: 256,
+      height: 240,
+      zoom:2,
       physics: {
         default: 'arcade',
         arcade: {

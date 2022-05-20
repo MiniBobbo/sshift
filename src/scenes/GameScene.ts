@@ -66,20 +66,20 @@ export class GameScene extends Phaser.Scene {
             x:0, y:0,
         }).fillStyle(0x882244, .5).setDepth(5000);
     // Pointer lock will only work after an 'engagement gesture', e.g. mousedown, keypress, etc.
-    this.input.on('pointerdown', (pointer) => {
-        this.input.mouse.requestPointerLock();
-    }, this);
+    // this.input.on('pointerdown', (pointer) => {
+    //     this.input.mouse.requestPointerLock();
+    // }, this);
 
-    // When locked, you will have to use the movementX and movementY properties of the pointer
-    // (since a locked cursor's xy position does not update)
-    this.input.on('pointermove', (pointer) => {
+    // // When locked, you will have to use the movementX and movementY properties of the pointer
+    // // (since a locked cursor's xy position does not update)
+    // this.input.on('pointermove', (pointer) => {
 
-        if (this.input.mouse.locked)
-        {
-            this.PointerOffset.x += pointer.movementX * C.MOUSE_SENSITIVITY;
-            this.PointerOffset.y += pointer.movementY * C.MOUSE_SENSITIVITY;
-        }
-    }, this);
+    //     if (this.input.mouse.locked)
+    //     {
+    //         this.PointerOffset.x += pointer.movementX * C.MOUSE_SENSITIVITY;
+    //         this.PointerOffset.y += pointer.movementY * C.MOUSE_SENSITIVITY;
+    //     }
+    // }, this);
 
         // let ground = this.physics.add.sprite(400,400, 'atlas').setSize(100,100).setImmovable(true);
         // this.physics.add.collider(this.collideMap, ground);
