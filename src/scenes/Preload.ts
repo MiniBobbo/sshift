@@ -79,29 +79,24 @@ export class Preload extends Phaser.Scene {
         IH.AddVirtualInput('left');
         IH.AddVirtualInput('right');
         IH.AddVirtualInput('jump');
-        IH.AddVirtualInput('throw');
         IH.AddVirtualInput('attack');
+        IH.AddVirtualInput('roll');
         IH.AddVirtualInput('event');
 
         IH.AssignKeyToVirtualInput('UP', 'up');
         IH.AssignKeyToVirtualInput('DOWN', 'down');
         IH.AssignKeyToVirtualInput('LEFT', 'left');
         IH.AssignKeyToVirtualInput('RIGHT', 'right');
-        IH.AssignKeyToVirtualInput('E', 'event');
+        IH.AssignKeyToVirtualInput('SPACE', 'roll');
+        IH.AssignKeyToVirtualInput('E', 'roll');
         IH.AssignKeyToVirtualInput('W', 'up');
         IH.AssignKeyToVirtualInput('S', 'down');
         IH.AssignKeyToVirtualInput('A', 'left');
         IH.AssignKeyToVirtualInput('D', 'right');
-        IH.AssignKeyToVirtualInput('Z', 'jump');
-        IH.AssignKeyToVirtualInput('L', 'jump');
-        IH.AssignKeyToVirtualInput('K', 'attack');
-        IH.AssignKeyToVirtualInput('X', 'attack');
 
 
         this.anims.create({ key: 'player_stand', frameRate: 60, frames: this.anims.generateFrameNames('atlas', { prefix: 'player_stand_', end: 0}), repeat: -1 });
         this.anims.create({ key: 'player_run', frameRate: 20, frames: this.anims.generateFrameNames('atlas', { prefix: 'player_run_', end: 7}), repeat: -1 });
-        this.anims.create({ key: 'player_jumpup', frameRate: 20, frames: this.anims.generateFrameNames('atlas', { prefix: 'player_jumpup_', end: 0}), repeat: -1 });
-        this.anims.create({ key: 'player_jumpdown', frameRate: 20, frames: this.anims.generateFrameNames('atlas', { prefix: 'player_jumpdown_', end: 3}), repeat: 0 });
 
     }
 }

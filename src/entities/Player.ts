@@ -1,11 +1,15 @@
 import { Entity } from "./Entity";
 import { C } from "../C";
 import { PlayerMoveFSM } from "../FSM/PlayerMoveFSM";
+import { PlayerRollFSM } from "../FSM/PlayerRoll";
+import { PlayerAttackFSM } from "../FSM/PlayerAttackFSM";
 
 export class Player extends Entity {
     Attack:Phaser.Physics.Arcade.Image;
     D1:Phaser.Physics.Arcade.Image;
     D2:Phaser.Physics.Arcade.Image;
+    //The angle that this player is facing, in radians.  
+    Facing:number;
 
     constructor(scene:Phaser.Scene) {
         super(scene);
@@ -19,6 +23,8 @@ export class Player extends Entity {
         this.sprite.setDepth(5);
         this.PlayAnimation('stand');
         this.fsm.addModule('move', new PlayerMoveFSM(this));
+        this.fsm.addModule('roll', new PlayerRollFSM(this));
+        this.fsm.addModule('attack', new PlayerAttackFSM(this));
         this.fsm.changeModule('move');
         this.gs.collideMap.add(this.sprite);
 
@@ -35,51 +41,6 @@ export class Player extends Entity {
         super.Update(time, dt);
     }
 
-    LaunchAttack() {
-
-        let p = {x:this.gs.Pointer.x + this.gs.cameras.main.scrollX, y:this.gs.Pointer.y + this.gs.cameras.main.scrollY};
-        let angle = Phaser.Math.Angle.BetweenPoints(this.sprite, p);
-        let o = new Phaser.Math.Vector2(12,0);
-        // o.rotate(Phaser.Math.RadToDeg(angle));
-        o.rotate(angle);
-        let bonusx = 0;
-        let bonusy = 0;
-        if(p.x > this.sprite.x)
-        bonusx++;
-        if(p.y > this.sprite.y)
-        bonusy++;
-
-        p.x = this.sprite.x + o.x;
-        p.y = this.sprite.y + o.y;
-
-        this.Attack.setPosition(p.x + bonusx, p.y + bonusy);
-        // this.g.lineBetween(this.sprite.x, this.sprite.y, this.gs.Pointer.x, this.gs.Pointer.y);
-    }
-
-    LaunchDefense() {
-
-        // this.g.clear();
-        let p = {x:this.gs.Pointer.x + this.gs.cameras.main.scrollX, y:this.gs.Pointer.y + this.gs.cameras.main.scrollY};
-        let angle = Phaser.Math.Angle.BetweenPoints(this.sprite, p);
-        let o = new Phaser.Math.Vector2(8, 3);
-        let o2 = new Phaser.Math.Vector2(8, -3);
-        // o.rotate(Phaser.Math.RadToDeg(angle));
-        o.rotate(angle);
-        o2.rotate(angle);
-        let bonusx = 0;
-        let bonusy = 0;
-        if(p.x > this.sprite.x)
-        bonusx++;
-        if(p.y > this.sprite.y)
-        bonusy++;
-
-        p.x = this.sprite.x  + o.x;
-        p.y = this.sprite.y + o.y;
-        this.D1.setPosition(p.x + bonusx, p.y + bonusy);
-        p.x = this.sprite.x + o2.x;
-        p.y = this.sprite.y + o2.y;
-        this.D2.setPosition(p.x + bonusx, p.y + bonusy);
-    }
 
 
 

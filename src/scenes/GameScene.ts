@@ -13,6 +13,7 @@ import { C } from "../C";
 import { NumericLiteral } from "typescript";
 import { threadId } from "worker_threads";
 import { MainChar } from "../entities/MainChar";
+import { SceneEvents } from "../events/SceneEvents";
 
 export class GameScene extends Phaser.Scene {
     player!:Player;
@@ -72,9 +73,9 @@ export class GameScene extends Phaser.Scene {
             else {
                 // console.log(`Buton pressed ${pointer.button}`);
                 if(pointer.button == 0)
-                this.player.LaunchAttack();
+                    this.events.emit(SceneEvents.Button_1_Pressed);
                 else
-                this.player.LaunchDefense();
+                this.events.emit(SceneEvents.Button_2_Pressed);
             }
         }, this);
 
@@ -171,8 +172,12 @@ export class GameScene extends Phaser.Scene {
         this.PointerOffset.x = Phaser.Math.Clamp(this.PointerOffset.x, 0,360);
         this.PointerOffset.y = Phaser.Math.Clamp(this.PointerOffset.y, 0,270);
 
+        let p = {x:0, y:0};
+        p.x = this.Pointer.x + this.cameras.main.scrollX;
+        p.y = this.Pointer.y + this.cameras.main.scrollY;
         this.Pointer.setPosition(this.PointerOffset.x, this.PointerOffset.y);
-
+        this.player.Facing = Phaser.Math.Angle.BetweenPoints(this.player.sprite, p);
+        this.events.emit('debug', `Angle: ${Phaser.Math.RadToDeg(this.player.Facing)}`);
     }
 
     /**
@@ -230,7 +235,7 @@ export class GameScene extends Phaser.Scene {
             // }
         }
 
-        this.events.emit('debug', `Player FSM: ${this.player.fsm.currentModuleName}`, false);
+        // this.events.emit('debug', `Player FSM: ${this.player.fsm.currentModuleName}`, false);
         // this.events.emit('debug', `Effects: ${this.effects.getLength()}`);
         // this.events.emit('debug', `P loc: ${Math.floor(this.player.sprite.body.x)},  ${Math.floor(this.player.sprite.body.y)}`);
         // this.events.emit('debug', `Mouse loc: ${Math.floor(this.input.mousePointer.worldX)},  ${Math.floor(this.input.mousePointer.worldY)}`);

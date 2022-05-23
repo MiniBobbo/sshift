@@ -10,6 +10,7 @@ export class C {
     // static GRAVITY:number = 1000;
     static MAX_Y_SPEED:number = 500;
     static PLAYER_GROUND_SPEED:number = 100;
+    static PLAYER_GROUND_ATTACK_SPEED:number = 50;
     static PLAYER_SLIDE_DRAG:number = 700;
     static PLAYER_SLIDE_SPEED:number = 300;
     static PLAYER_CLIMB_SPEED:number = 50;
@@ -20,7 +21,12 @@ export class C {
     static PLAYER_AIR_DRAG:number = 400;
     static PLAYER_JUMP_STR:number = 200;
     static PLAYER_JUMP_TIME:number = 300;
-    static PLAYER_ATTACK_TIME:number = 250;
+    static PLAYER_ATTACK_TIME:number = 500;
+    static PLAYER_LEAP_SPEED:number = 250;
+    static PLAYER_LEAP_TIME:number = 300;
+    static PLAYER_ROLL_SPEED:number = 75;
+    static PLAYER_ROLL_TIME:number = 300;
+
 
     static PLAY_X:number = 360;
     static PLAY_Y:number = 270;
