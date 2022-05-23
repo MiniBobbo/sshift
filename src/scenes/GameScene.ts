@@ -12,6 +12,7 @@ import { MapObjects } from "../map/MapObjects";
 import { C } from "../C";
 import { NumericLiteral } from "typescript";
 import { threadId } from "worker_threads";
+import { MainChar } from "../entities/MainChar";
 
 export class GameScene extends Phaser.Scene {
     player!:Player;
@@ -65,22 +66,31 @@ export class GameScene extends Phaser.Scene {
         this.g = this.add.graphics({
             x:0, y:0,
         }).fillStyle(0x882244, .5).setDepth(5000);
-    // Pointer lock will only work after an 'engagement gesture', e.g. mousedown, keypress, etc.
-    // this.input.on('pointerdown', (pointer) => {
-    //     this.input.mouse.requestPointerLock();
-    // }, this);
+        this.input.on('pointerdown', (pointer:Phaser.Input.Pointer) => {
+            if(!this.input.mouse.locked)
+            this.input.mouse.requestPointerLock();
+            else {
+                // console.log(`Buton pressed ${pointer.button}`);
+                if(pointer.button == 0)
+                this.player.LaunchAttack();
+                else
+                this.player.LaunchDefense();
+            }
+        }, this);
 
-    // // When locked, you will have to use the movementX and movementY properties of the pointer
-    // // (since a locked cursor's xy position does not update)
-    // this.input.on('pointermove', (pointer) => {
+        this.events.on('preupdate', this.preupdate, this);
 
-    //     if (this.input.mouse.locked)
-    //     {
-    //         this.PointerOffset.x += pointer.movementX * C.MOUSE_SENSITIVITY;
-    //         this.PointerOffset.y += pointer.movementY * C.MOUSE_SENSITIVITY;
-    //     }
-    // }, this);
+        this.events.on('debug', (t:string, reset:boolean = false) => {  if(reset) this.debugText.text = "";  this.debugText.text += t;  });
+        // // When locked, you will have to use the movementX and movementY properties of the pointer
+        // // (since a locked cursor's xy position does not update)
+        this.input.on('pointermove', (pointer) => {
 
+        if (this.input.mouse.locked)
+        {
+            this.PointerOffset.x += pointer.movementX * C.MOUSE_SENSITIVITY;
+            this.PointerOffset.y += pointer.movementY * C.MOUSE_SENSITIVITY;
+        }
+        }, this);
         // let ground = this.physics.add.sprite(400,400, 'atlas').setSize(100,100).setImmovable(true);
         // this.physics.add.collider(this.collideMap, ground);
         let m = this.allMaps.find(e=>e.level.identifier == 'Level_0');
@@ -119,7 +129,7 @@ export class GameScene extends Phaser.Scene {
         this.events.on('effect', this.Effect, this);
         // this.player.sprite.on('dead', this.PlayerDied, this);
         this.events.on('shutdown', this.ShutDown, this);
-        this.events.on('travel', () => { this.player.fsm.clearModule(); this.cameras.main.fadeOut(200, 0,0,0,(cam:any, progress:number) => { if(progress == 1) this.scene.restart();}); }, this);
+        // this.events.on('travel', () => { this.player.fsm.clearModule(); this.cameras.main.fadeOut(200, 0,0,0,(cam:any, progress:number) => { if(progress == 1) this.scene.restart();}); }, this);
         this.events.on('textbox', (speaker:{x:number, y:number}, message:string) => {
             this.tb.setVisible(true);
             this.tb.SetText(message); 
@@ -155,43 +165,15 @@ export class GameScene extends Phaser.Scene {
         this.cameras.main.setBounds(0, 0, this.currentMap.width, this.currentMap.height);
     }
 
-    // private CreateMap(r: LdtkReader) {
+    preupdate(time:number, dt:number) {
+        if(this.PointerOffset == null)
+        return;
+        this.PointerOffset.x = Phaser.Math.Clamp(this.PointerOffset.x, 0,360);
+        this.PointerOffset.y = Phaser.Math.Clamp(this.PointerOffset.y, 0,270);
 
-    //     this.IntMaps.clear();
-    //     this.nextMap = this.allMaps.find(e=>e.level.identifier == C.currentLevel);
+        this.Pointer.setPosition(this.PointerOffset.x, this.PointerOffset.y);
 
-    //     if(this.currentMap == null) {
-    //         let mo = SetupMapHelper.SetupMap(this,this.nextMap);
-    //         SetupMapHelper.CreatePlayer(this, this.nextMap);
-    //         this.cameras.main.setBounds(0, 0, this.nextMap.width, this.nextMap.height);
-    //         this.AllMapObjects.push(mo);
-    //     } else {
-    //         //Find this level's AllMapObjects, if it exists.
-    //         let mo = this.AllMapObjects.find(e=>e.Level == C.currentLevel);
-    //         this.AllMapObjects.forEach(element => {
-    //             if(element.Level != C.currentLevel)
-    //                 element.SetEnabled(false);
-    //         });
-    //         this.IntMaps.clear();
-    //         // this.currentMapObject.Destroy();
-    //         if(mo == null || mo == undefined) {
-    //             this.AllMapObjects.push(SetupMapHelper.SetupMap(this,this.nextMap));
-    //         } else {
-    //             mo.SetEnabled(true);
-    //         }
-    //         this.currentMap.SetVisible(false);
-    //         this.cameras.main.setBounds(0, 0, this.nextMap.width, this.nextMap.height);
-    //     }
-    //     // this.currentMap.Destroy();
-    //     // this.currentMapObject.Destroy();
-    //     this.currentMap = this.nextMap;
-    //     // this.currentMapObject = this.nextMapObjects;
-    //     this.nextMap = null;
-    //     // this.nextMapObjects = null;
-
-    //     //Set the current map visible
-    //     this.currentMap.SetVisible();
-    // }
+    }
 
     /**
      * remove the listeners of all the events creted in create() or they will fire multiple times.  
@@ -248,7 +230,7 @@ export class GameScene extends Phaser.Scene {
             // }
         }
 
-        this.events.emit('debug', `Player FSM: ${this.player.fsm.currentModuleName}`);
+        this.events.emit('debug', `Player FSM: ${this.player.fsm.currentModuleName}`, false);
         // this.events.emit('debug', `Effects: ${this.effects.getLength()}`);
         // this.events.emit('debug', `P loc: ${Math.floor(this.player.sprite.body.x)},  ${Math.floor(this.player.sprite.body.y)}`);
         // this.events.emit('debug', `Mouse loc: ${Math.floor(this.input.mousePointer.worldX)},  ${Math.floor(this.input.mousePointer.worldY)}`);

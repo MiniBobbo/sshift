@@ -16,11 +16,14 @@ export class C {
     static PLAYER_AIR_SPEED:number = 100;
     static PLAYER_GROUND_ACCEL:number = 800;
     static PLAYER_AIR_ACCEL:number = 400;
-    static PLAYER_GROUND_DRAG:number = 400;
+    static PLAYER_GROUND_DRAG:number = 800;
     static PLAYER_AIR_DRAG:number = 400;
     static PLAYER_JUMP_STR:number = 200;
     static PLAYER_JUMP_TIME:number = 300;
     static PLAYER_ATTACK_TIME:number = 250;
+
+    static PLAY_X:number = 360;
+    static PLAY_Y:number = 270;
 
     static MOUSE_SENSITIVITY:number = .8;
 

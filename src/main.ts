@@ -4,14 +4,15 @@ import { GameScene } from "./scenes/GameScene";
 import { C } from "./C";
 import { GameData } from "./GameData";
 import { MainMenuScene } from "./scenes/MainMenuScene";
+import { TestScene } from "./scenes/TestScene";
 
 
 class Main extends Phaser.Game {
   constructor() {
     const config: Phaser.Types.Core.GameConfig = {
       type: Phaser.WEBGL,
-      width: 256,
-      height: 240,
+      width: 490,
+      height: 270,
       zoom:2,
       physics: {
         default: 'arcade',
@@ -33,6 +34,7 @@ class Main extends Phaser.Game {
     // this.scene.add("boot", Boot, false);
     this.scene.add("preload", Preload, false);
     this.scene.add("game", GameScene, false);
+    this.scene.add("test", TestScene, false);
     this.scene.start("preload");
     C.gd = new GameData();
     // C.setFlag('5', true);

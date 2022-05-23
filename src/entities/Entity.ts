@@ -18,8 +18,9 @@ export class Entity {
     flashTime:number = 200;
 
 
-    constructor(scene:Phaser.Scene, ih:IH) {
+    constructor(scene:Phaser.Scene) {
         this.gs = scene as GameScene;
+        this.ih = this.gs.ih;
         this.sprite = scene.physics.add.sprite(0,0, 'atlas')
         this.sprite.setSize(16,16);
         this.scene = scene;
@@ -27,7 +28,6 @@ export class Entity {
         this.sprite.setDepth(50);
         this.fsm = new FSM(this);
         this.fsm.addModule('nothing', new NothingFSM(this));
-        this.ih = ih;
 
         this.sprite.on('damage', this.Damage, this);
         this.sprite.on('stun', this.Stun, this);

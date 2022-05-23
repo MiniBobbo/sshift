@@ -1,6 +1,7 @@
 import { forEachLeadingCommentRange } from "typescript";
 import { C } from "../C";
 import { Bat } from "../entities/Bat";
+import { MainChar } from "../entities/MainChar";
 import { Player } from "../entities/Player";
 import { EntityInstance, LDtkMapPack } from "../map/LDtkReader";
 import { MapObjects } from "../map/MapObjects";
@@ -59,7 +60,7 @@ export class SetupMapHelper {
 
     static CreatePlayer(gs:GameScene, maps:LDtkMapPack) {
         let StartLocation = maps.entityLayers.entityInstances.find((i:EntityInstance) =>  i.__identifier === 'PlayerStart');
-        gs.player = new Player(gs, gs.ih);
+        gs.player = new Player(gs);
         gs.player.sprite.setPosition(StartLocation.px[0], StartLocation.px[1] + 6);
     }
 

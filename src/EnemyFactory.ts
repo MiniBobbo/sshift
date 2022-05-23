@@ -10,7 +10,7 @@ export class EnemyFactory {
         switch (o.type) {
 
             default:
-                return new Entity(scene, ih);
+                return new Entity(scene);
                 break;
         }
     }
