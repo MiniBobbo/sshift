@@ -73,10 +73,7 @@ export class PlayerMoveFSM extends FSMModule {
             this.e.sprite.flipX = false;
         } else {
             this.e.PlayAnimation('stand');
-
         }
-
-
     }
 
     LaunchAttack() {
@@ -105,24 +102,28 @@ export class PlayerMoveFSM extends FSMModule {
         // this.g.clear();
         // let p = {x:this.gs.Pointer.x + this.gs.cameras.main.scrollX, y:this.gs.Pointer.y + this.gs.cameras.main.scrollY};
         // let angle = Phaser.Math.Angle.BetweenPoints(this.sprite, p);
-        // let o = new Phaser.Math.Vector2(8, 3);
-        // let o2 = new Phaser.Math.Vector2(8, -3);
+        let o = new Phaser.Math.Vector2(8, 3);
+        let o2 = new Phaser.Math.Vector2(8, -3);
         // // o.rotate(Phaser.Math.RadToDeg(angle));
-        // o.rotate(angle);
-        // o2.rotate(angle);
+        o.rotate(this.e.Facing);
+        o2.rotate(this.e.Facing);
         // let bonusx = 0;
         // let bonusy = 0;
         // if(p.x > this.sprite.x)
         // bonusx++;
         // if(p.y > this.sprite.y)
         // bonusy++;
+        let p:{x:number, y:number} = {x:0, y:0};
 
-        // p.x = this.sprite.x  + o.x;
-        // p.y = this.sprite.y + o.y;
-        // this.D1.setPosition(p.x + bonusx, p.y + bonusy);
-        // p.x = this.sprite.x + o2.x;
-        // p.y = this.sprite.y + o2.y;
-        // this.D2.setPosition(p.x + bonusx, p.y + bonusy);
+        p.x = this.e.sprite.x  + o.x;
+        p.y = this.e.sprite.y + o.y;
+        this.e.D1.setPosition(p.x , p.y);
+        p.x = this.e.sprite.x + o2.x;
+        p.y = this.e.sprite.y + o2.y;
+        this.e.D2.setPosition(p.x , p.y);
+
+        this.parent.changeFSM('defense');
+
     }
 
 }

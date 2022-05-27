@@ -1,6 +1,5 @@
 import { textChangeRangeIsUnchanged } from "typescript";
 import { C } from "../C";
-import { MainChar } from "../entities/MainChar";
 
 export class TestScene extends Phaser.Scene {
     g:Phaser.GameObjects.Graphics;
@@ -9,7 +8,6 @@ export class TestScene extends Phaser.Scene {
     Attack:Phaser.Physics.Arcade.Image;
     D1:Phaser.Physics.Arcade.Image;
     D2:Phaser.Physics.Arcade.Image;
-    p:MainChar;
     t:Phaser.GameObjects.Text;
 
     create() {
@@ -31,8 +29,6 @@ export class TestScene extends Phaser.Scene {
         this.g.fillStyle(0x883333);
         this.g.fillRect(100,100,16,16);
 
-        this.p = new MainChar(this);
-        this.p.sprite.setPosition(100,100).setVisible(false);
 
         this.t = this.add.text(0,0,'');
 
@@ -77,8 +73,5 @@ export class TestScene extends Phaser.Scene {
     }
 
     update() {
-        this.events.emit('debug', `s: ${this.p.sprite.x}, ${this.p.sprite.y}\n`, true);
-        this.events.emit('debug', `b: ${this.p.sprite.body.x}, ${this.p.sprite.body.y}\n`);
-        this.events.emit('debug', `p: ${this.Pointer.x}, ${this.Pointer.y}\n`);
     }
 }

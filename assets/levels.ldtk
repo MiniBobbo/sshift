@@ -154,7 +154,7 @@
 		{
 			"identifier": "Enemy",
 			"uid": 21,
-			"tags": ["region"],
+			"tags": [],
 			"width": 16,
 			"height": 16,
 			"resizableX": true,
@@ -337,11 +337,7 @@
 			"savedSelections": [],
 			"cachedPixelData": { "opaqueTiles": "1111", "averageColors": "f39ff6f5ff73ff7e" }
 		}
-	], "enums": [{ "identifier": "EnemyType", "uid": 22, "values": [
-		{ "id": "Bat", "tileId": null, "color": 2439361, "__tileSrcRect": null },
-		{ "id": "Cat", "tileId": null, "color": 2922563, "__tileSrcRect": null },
-		{ "id": "Rat", "tileId": null, "color": 7033137, "__tileSrcRect": null }
-	], "iconTilesetUid": null, "externalRelPath": null, "externalFileChecksum": null, "tags": [] }], "externalEnums": [], "levelFields": [] },
+	], "enums": [{ "identifier": "EnemyType", "uid": 22, "values": [{ "id": "Shooter", "tileId": null, "color": 7033137, "__tileSrcRect": null }], "iconTilesetUid": null, "externalRelPath": null, "externalFileChecksum": null, "tags": [] }], "externalEnums": [], "levelFields": [] },
 	"levels": [
 		{
 			"identifier": "Level_0",
@@ -401,6 +397,23 @@
 							"defUid": 32,
 							"px": [224,240],
 							"fieldInstances": []
+						},
+						{
+							"__identifier": "Enemy",
+							"__grid": [11,12],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#94D9B3",
+							"iid": "84c5fa50-dbe0-11ec-8398-f3cc5e00f12e",
+							"width": 16,
+							"height": 16,
+							"defUid": 21,
+							"px": [176,192],
+							"fieldInstances": [{ "__identifier": "EnemyType", "__value": "Shooter", "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 25, "realEditorValues": [{
+								"id": "V_String",
+								"params": ["Shooter"]
+							}] }]
 						}
 					]
 				},

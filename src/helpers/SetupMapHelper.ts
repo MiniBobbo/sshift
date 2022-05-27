@@ -1,8 +1,7 @@
-import { forEachLeadingCommentRange } from "typescript";
+import { forEachLeadingCommentRange, getJSDocTags } from "typescript";
 import { C } from "../C";
-import { Bat } from "../entities/Bat";
-import { MainChar } from "../entities/MainChar";
 import { Player } from "../entities/Player";
+import { Shooter } from "../entities/Shooter";
 import { EntityInstance, LDtkMapPack } from "../map/LDtkReader";
 import { MapObjects } from "../map/MapObjects";
 import { GameScene } from "../scenes/GameScene";
@@ -33,6 +32,8 @@ export class SetupMapHelper {
     }
     static CreateEntities(gs: GameScene, maps: LDtkMapPack, mo:MapObjects) {
         maps.entityLayers.entityInstances.forEach(element => {
+            //Map Game Objects are display objects without the attached Entity object while the mapEntities are just for Entities 
+            //It's obvious now, but I've had to look it up twice, so I figured I'd write it down. 
             switch (element.__identifier) {
                 case 'Text':
                         let message = element.fieldInstances[0];
@@ -43,9 +44,10 @@ export class SetupMapHelper {
                 case 'Enemy':
                         let type = element.fieldInstances[0];
                         switch (type.__value) {
-                            case 'Bat':
-                                    let b = new Bat(gs, gs.ih);
+                            case 'Shooter':
+                                    let b = new Shooter(gs);
                                     b.sprite.setPosition(element.px[0], element.px[1]);
+                                    mo.mapEntities.push(b);
                                 break;
                         
                             default:

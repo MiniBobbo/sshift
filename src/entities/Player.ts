@@ -3,6 +3,8 @@ import { C } from "../C";
 import { PlayerMoveFSM } from "../FSM/PlayerMoveFSM";
 import { PlayerRollFSM } from "../FSM/PlayerRoll";
 import { PlayerAttackFSM } from "../FSM/PlayerAttackFSM";
+import { PlayerDefenseFSM } from "../FSM/PlayerDefenseFSM";
+import { GameScene } from "../scenes/GameScene";
 
 export class Player extends Entity {
     Attack:Phaser.Physics.Arcade.Image;
@@ -13,6 +15,7 @@ export class Player extends Entity {
 
     constructor(scene:Phaser.Scene) {
         super(scene);
+        this.gs = scene as GameScene;
         this.hp = 5;
         this.maxhp = 5;
         this.flashTime = 1000;
@@ -25,6 +28,7 @@ export class Player extends Entity {
         this.fsm.addModule('move', new PlayerMoveFSM(this));
         this.fsm.addModule('roll', new PlayerRollFSM(this));
         this.fsm.addModule('attack', new PlayerAttackFSM(this));
+        this.fsm.addModule('defense', new PlayerDefenseFSM(this));
         this.fsm.changeModule('move');
         this.gs.collideMap.add(this.sprite);
 

@@ -6,11 +6,12 @@ import { SceneEvents } from "../events/SceneEvents";
 import { IH } from "../IH/IH";
 import { FSMModule } from "./FSMModule"
 
-export class PlayerAttackFSM extends FSMModule {
+export class PlayerDefenseFSM extends FSMModule {
     e!:Player;
     ih!:IH;
     timer:Phaser.Time.TimerEvent;
-    offset:{x:number, y:number};
+    o1:{x:number, y:number};
+    o2:{x:number, y:number};
     
     moduleStart() {
         this.e = this.parent as Player;
@@ -18,16 +19,12 @@ export class PlayerAttackFSM extends FSMModule {
         this.e.sprite.setMaxVelocity(C.PLAYER_GROUND_ATTACK_SPEED);
         this.e.sprite.setDrag(C.PLAYER_GROUND_DRAG);
 
-        this.offset = {x:this.e.Attack.x - this.e.sprite.x, y:this.e.Attack.y - this.e.sprite.y};
+        this.o1 = {x:this.e.D1.x - this.e.sprite.x, y:this.e.D1.y - this.e.sprite.y};
+        this.o2 = {x:this.e.D2.x - this.e.sprite.x, y:this.e.D2.y - this.e.sprite.y};
 
-        console.log('Attacking');
-        this.timer = this.e.gs.time.addEvent({
-            delay:C.PLAYER_ATTACK_TIME,
-            callbackScope:this,
-            callback:() => {
-                this.parent.changeFSM('move');
-            }
-        });
+        console.log('Defense');
+        this.e.gs.events.on(SceneEvents.Button_2_Released, () => {this.parent.changeFSM('move');}, this);
+
 
 
     }
@@ -38,7 +35,8 @@ export class PlayerAttackFSM extends FSMModule {
         this.e.sprite.setMaxVelocity(C.PLAYER_GROUND_ATTACK_SPEED);
         if(this.timer != null)
         this.timer.destroy();
-        this.e.Attack.setPosition(-500,-500);
+        this.e.D1.setPosition(-500,-500);
+        this.e.D2.setPosition(-500,-500);
     }
 
     update(dt:number) {
@@ -67,7 +65,8 @@ export class PlayerAttackFSM extends FSMModule {
             this.parent.changeFSM('roll');
     
 
-        this.e.Attack.setPosition(this.e.sprite.x + this.offset.x, this.e.sprite.y + this.offset.y);
+        this.e.D1.setPosition(this.e.sprite.x + this.o1.x, this.e.sprite.y + this.o1.y);
+        this.e.D2.setPosition(this.e.sprite.x + this.o2.x, this.e.sprite.y + this.o2.y);
         
         this.ChangeAnimation();
     }

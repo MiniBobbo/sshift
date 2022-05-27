@@ -12,8 +12,9 @@ import { MapObjects } from "../map/MapObjects";
 import { C } from "../C";
 import { NumericLiteral } from "typescript";
 import { threadId } from "worker_threads";
-import { MainChar } from "../entities/MainChar";
 import { SceneEvents } from "../events/SceneEvents";
+import { BaseAttack } from "../attacks/BaseAttack";
+import { Signals } from "../Signals";
 
 export class GameScene extends Phaser.Scene {
     player!:Player;
@@ -36,6 +37,11 @@ export class GameScene extends Phaser.Scene {
     private LastVisitedLevels:Array<string>;
     private _mapCollider:Phaser.Physics.Arcade.Collider;
 
+    private _enemyAttacks:Phaser.GameObjects.Group;
+    private _playerAttacks:Phaser.GameObjects.Group;
+    private _playerDefense:Phaser.GameObjects.Group;
+
+
     PointerOffset:{x:number, y:number};
     Pointer:Phaser.GameObjects.Image;
 
@@ -56,8 +62,8 @@ export class GameScene extends Phaser.Scene {
 
         this.ChangeMap(C.currentLevel);
         SetupMapHelper.CreatePlayer(this, this.currentMap);
-
-        this.events.on('debug', (s:string) => {this.debugText.text += `${s}\n`;});
+        this._playerDefense = this.add.group([this.player.D1, this.player.D2]);
+        this._playerAttacks = this.add.group([this.player.Attack]);
 
         this.PointerOffset = {x:0, y:0};
         this.Pointer = this.add.image(0,0, 'pointer').setDepth(1000).setScrollFactor(0,0);
@@ -78,6 +84,13 @@ export class GameScene extends Phaser.Scene {
                 this.events.emit(SceneEvents.Button_2_Pressed);
             }
         }, this);
+        this.input.on('pointerup', (pointer:Phaser.Input.Pointer) => {
+                // console.log(`Buton pressed ${pointer.button}`);
+                if(pointer.button == 0)
+                    this.events.emit(SceneEvents.Button_1_Released);
+                else
+                this.events.emit(SceneEvents.Button_2_Released);
+        }, this);
 
         this.events.on('preupdate', this.preupdate, this);
 
@@ -93,11 +106,13 @@ export class GameScene extends Phaser.Scene {
         }
         }, this);
         // let ground = this.physics.add.sprite(400,400, 'atlas').setSize(100,100).setImmovable(true);
-        // this.physics.add.collider(this.collideMap, ground);
         let m = this.allMaps.find(e=>e.level.identifier == 'Level_0');
-
-        // this.physics.add.collider(this.IntMaps, m.collideLayer);
+        this.CreatePhysics();
         this.cameras.main.fadeIn(300);
+    }
+
+    CreatePhysics() {
+        this.physics.overlap(this._enemyAttacks, this._playerDefense, (a:Phaser.GameObjects.GameObject ) => { console.log("Defended"); a.emit(Signals.CollidePlayerDefense);});
     }
 
     InitScene() {
@@ -105,12 +120,11 @@ export class GameScene extends Phaser.Scene {
         this.collideMap=this.add.group();
         this.IntMaps = this.add.group();
         this.enemies = this.add.group();
+        this._enemyAttacks = this.add.group();
         var r:LdtkReader = new LdtkReader(this,this.cache.json.get('level'));
         this.reader = r;
         this.cam = this.add.image(0,0,'atlas').setVisible(false);
-        // this.physics.add.overlap(this.player.sprite, this.enemies, (p:any, e:any) => {
-        //     e.emit('hitplayer', p);
-        // }); 
+
 
         this.allMaps = [];
         this.AllMapObjects = [];
@@ -143,7 +157,6 @@ export class GameScene extends Phaser.Scene {
         this.tb = new TextBox(this, this.ih);
         this.tb.setVisible(false);
         this.cameras.main.setRoundPixels(true);
-
     }
 
     private ChangeMap(newMap:string) {
@@ -151,21 +164,28 @@ export class GameScene extends Phaser.Scene {
         C.currentLevel = newMap;
         if(this.currentMap != null) {
             this.currentMap.SetVisible(false);
-            // this.physics.world.colliders.removeAll();
             this.physics.world.colliders.remove(this._mapCollider);
         }
+
+        this._enemyAttacks.children.entries.forEach(element => {
+            element.emit('end');
+        });
+
         let m = this.allMaps.find(e=>e.level.identifier == newMap);
         m.SetVisible(true);
         m.collideLayer.setCollision([1,3]);
-        // this.IntMaps.add(m.collideLayer);
-        //Temp
-        // m.collideLayer.setVisible(true);
-        this._mapCollider = this.physics.add.collider(this.collideMap, m.collideLayer);
+        this._mapCollider = this.physics.add.collider(this.collideMap, m.collideLayer, this.Collided);
         this.physics.world.colliders[0];
         this.currentMap = m;
         this.cameras.main.setBounds(0, 0, this.currentMap.width, this.currentMap.height);
-    }
 
+        let mo = new MapObjects();
+        SetupMapHelper.CreateEntities(this, m, mo);
+    }
+    
+    Collided(e:any, o:any) {
+        e.emit(Signals.CollideMap, o);
+    }
     preupdate(time:number, dt:number) {
         if(this.PointerOffset == null)
         return;
@@ -221,24 +241,10 @@ export class GameScene extends Phaser.Scene {
             line.forEach(element => {
                 this.g.fillRect(element.x * C.TILE_SIZE, element.y * C.TILE_SIZE, C.TILE_SIZE, C.TILE_SIZE);
             });
-            // for (let index = 0; index < line.length; index++) {
-            //     const element = line[index];
-            //     let tile = this.currentMap.collideLayer.getTileAt(element.x, element.y);
-            //     if(tile.collides) {
-            //         this.g.fillStyle(0xff0000, .5);
-            //         this.g.fillRect(element.x * C.TILE_SIZE, element.y * C.TILE_SIZE, C.TILE_SIZE, C.TILE_SIZE);
-            //         break;
-            //     } else {
-            //         this.g.fillStyle(0x00ff55, .5);
-            //         this.g.fillRect(element.x * C.TILE_SIZE, element.y * C.TILE_SIZE, C.TILE_SIZE, C.TILE_SIZE);
-            //     }
-            // }
         }
 
-        // this.events.emit('debug', `Player FSM: ${this.player.fsm.currentModuleName}`, false);
-        // this.events.emit('debug', `Effects: ${this.effects.getLength()}`);
-        // this.events.emit('debug', `P loc: ${Math.floor(this.player.sprite.body.x)},  ${Math.floor(this.player.sprite.body.y)}`);
-        // this.events.emit('debug', `Mouse loc: ${Math.floor(this.input.mousePointer.worldX)},  ${Math.floor(this.input.mousePointer.worldY)}`);
+        this.events.emit('debug', `Player Defense: ${this._playerDefense.countActive()}`);
+        this.events.emit('debug', `Enemy Attack  : ${this._enemyAttacks.countActive()}`);
 
         if(this.player.sprite.x > this.currentMap.width) {
             console.log('Off screen to right');
@@ -304,13 +310,14 @@ export class GameScene extends Phaser.Scene {
         });
     }
 
-    GetEnemyAttack():any {
-        // let a = this.enemyAttacks.find( (a:BaseAttack) => { return a.sprite.body.enable === false;})
-        // if(a===undefined) {
-        //     a = new BaseAttack(this);
-        //     this.enemyAttacks.push(a);
-        // }
-        // return a;
+    GetEnemyAttack():Phaser.Physics.Arcade.Sprite {
+        let a = this._enemyAttacks.getFirstDead();
+        if(a==null) {
+            a = this.physics.add.sprite(-100,-100,'atlas');
+            this._enemyAttacks.add(a);
+            this.collideMap.add(a);
+        }
+        return a;
     }
         
     GetPlayerAttack(type:string):any {
